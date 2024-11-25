@@ -11,7 +11,6 @@ interface UploadedFile {
 
 const props = defineProps<{
   file: UploadedFile
-  selectionMode: boolean
 }>()
 
 const emit = defineEmits<{
@@ -30,9 +29,7 @@ const handleEscape = (e: KeyboardEvent) => {
 onMounted(() => {
   document.addEventListener('keydown', handleEscape)
   // Focus the textarea after the modal is mounted
-  if (!props.selectionMode) {
-    textareaRef.value?.focus()
-  }
+  textareaRef.value?.focus()
 })
 
 onUnmounted(() => {

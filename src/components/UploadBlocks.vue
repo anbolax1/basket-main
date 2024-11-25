@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import FileUpload from './FileUpload.vue'
 
 interface UploadBlock {
   id: string
   files: UploadedFile[]
   message: string
-  selectedFiles: string[]
-  messageSelected: boolean
 }
 
 interface UploadedFile {
@@ -21,78 +19,9 @@ const blocks = ref<UploadBlock[]>([
   {
     id: 'initial',
     files: [],
-    message: '',
-    selectedFiles: [],
-    messageSelected: false
+    message: ''
   }
 ])
-
-const selectionMode = ref(false)
-
-const selectedCount = computed(() => {
-  return blocks.value.reduce((count, block) => {
-    return count + block.selectedFiles.length + (block.messageSelected ? 1 : 0)
-  }, 0)
-})
-
-const startSelection = (blockId: string, type: 'file' | 'message', id?: string) => {
-  if (!selectionMode.value) {
-    selectionMode.value = true
-    if (type === 'file' && id) {
-      selectFile(blockId, id)
-    } else if (type === 'message') {
-      selectMessage(blockId)
-    }
-  }
-}
-
-const selectFile = (blockId: string, fileId: string) => {
-  const block = blocks.value.find(b => b.id === blockId)
-  if (!block) return
-
-  const index = block.selectedFiles.indexOf(fileId)
-  if (index === -1) {
-    block.selectedFiles.push(fileId)
-  } else {
-    block.selectedFiles.splice(index, 1)
-  }
-
-  // Exit selection mode if nothing is selected
-  if (selectedCount.value === 0) {
-    selectionMode.value = false
-  }
-}
-
-const selectMessage = (blockId: string) => {
-  const block = blocks.value.find(b => b.id === blockId)
-  if (!block) return
-
-  block.messageSelected = !block.messageSelected
-
-  // Exit selection mode if nothing is selected
-  if (selectedCount.value === 0) {
-    selectionMode.value = false
-  }
-}
-
-const cancelSelection = () => {
-  selectionMode.value = false
-  blocks.value.forEach(block => {
-    block.selectedFiles = []
-    block.messageSelected = false
-  })
-}
-
-const deleteSelected = () => {
-  blocks.value = blocks.value.map(block => ({
-    ...block,
-    files: block.files.filter(f => !block.selectedFiles.includes(f.id)),
-    message: block.messageSelected ? '' : block.message,
-    selectedFiles: [],
-    messageSelected: false
-  }))
-  selectionMode.value = false
-}
 
 const handleFileUpload = (blockId: string, files: File[]) => {
   const blockIndex = blocks.value.findIndex(b => b.id === blockId)
@@ -204,43 +133,18 @@ const sendAllMessages = () => {
           :block-id="block.id"
           :files="block.files"
           :message="block.message"
-          :selection-mode="selectionMode"
-          :selected-files="block.selectedFiles"
-          :message-selected="block.messageSelected"
           @file-upload="handleFileUpload"
           @update-comment="(fileId, comment) => updateComment(block.id, fileId, comment)"
           @update-message="message => updateMessage(block.id, message)"
-          @select-file="fileId => selectFile(block.id, fileId)"
-          @select-message="() => selectMessage(block.id)"
-          @start-selection="(type, id) => startSelection(block.id, type, id)"
         />
       </div>
     </div>
 
-    <div class="fixed bottom-0 left-0 right-0 bg-telegram-bg border-t border-gray-700 p-4 z-40">
+    <div class="fixed bottom-0 left-0 right-0 bg-telegram-bg border-t border-gray-700 p-4 z-50">
       <div class="max-w-2xl mx-auto">
-        <div v-if="selectionMode" class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-4">
-            <button
-                @click="cancelSelection"
-                class="text-gray-400 hover:text-white"
-            >
-              Cancel
-            </button>
-            <span>{{ selectedCount }} selected</span>
-          </div>
-          <button
-              @click="deleteSelected"
-              class="text-red-500 hover:text-red-400"
-          >
-            Delete
-          </button>
-        </div>
-
         <button
-            v-else
-            @click="sendAllMessages"
-            class="w-full bg-telegram-primary hover:bg-telegram-secondary px-8 py-4 rounded-full transition-all duration-200 transform shadow-lg font-medium tracking-wide flex items-center justify-center gap-2"
+          @click="sendAllMessages"
+          class="w-full bg-telegram-primary hover:bg-telegram-secondary px-8 py-4 rounded-full transition-all duration-200 transform shadow-lg font-medium tracking-wide flex items-center justify-center gap-2"
         >
           <span>Send Messages</span>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">

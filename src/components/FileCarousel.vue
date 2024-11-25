@@ -5,7 +5,6 @@ import { Swiper, SwiperSlide } from 'swiper/vue'
 import { Navigation } from 'swiper/modules'
 import FileModal from './FileModal.vue'
 import FileIcon from './FileIcon.vue'
-import SelectableItem from './SelectableItem.vue'
 
 import 'swiper/css'
 import 'swiper/css/navigation'
@@ -15,21 +14,17 @@ interface UploadedFile {
   name: string
   preview: string
   comment: string
-  selected?: boolean
 }
 
 const props = defineProps<{
   files: UploadedFile[]
   hasText: boolean
   blockId: string
-  selectionMode: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'updateComment', fileId: string, comment: string): void
   (e: 'fileUpload', files: File[]): void
-  (e: 'select', fileId: string): void
-  (e: 'startSelection', fileId: string): void
 }>()
 
 const dropZoneRef = ref<HTMLElement | null>(null)
@@ -87,6 +82,7 @@ const swiperParams = {
 
 <template>
   <div class="relative">
+    <!-- Centered drop zone when no files -->
     <div
       v-if="!hasFiles"
       class="aspect-square max-w-[300px] mx-auto"
@@ -173,12 +169,6 @@ const swiperParams = {
         :key="file.id"
         class="!h-auto"
       >
-        <SelectableItem
-            :selected="file.selected"
-            :selection-mode="selectionMode"
-            @select="() => emit('select', file.id)"
-            @start-selection="() => emit('startSelection', file.id)"
-        >
         <div
           class="bg-telegram-hover rounded-lg p-2 cursor-pointer h-full"
           @click="openModal(file)"
@@ -207,7 +197,6 @@ const swiperParams = {
             @click.stop
           >
         </div>
-        </SelectableItem>
       </SwiperSlide>
     </Swiper>
 
@@ -220,7 +209,7 @@ const swiperParams = {
   </div>
 </template>
 
-<style scoped>
+<style>
 .swiper {
   padding: 0 2.5rem;
 }
